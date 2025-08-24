@@ -1,0 +1,86 @@
+Lab 1: Integrate Terraform Code with Azure CICD
+
+Step 1: Set Up Azure DevOps Project
+
+1.	Go to Azure DevOps and create a new Project.
+2.	Inside the project, go to Repos.
+
+Step 2: Create Service Connection to Azure
+
+1.	In Azure DevOps → Project Settings → Service Connections.
+2.	Click New Service Connection → Azure Resource Manager.
+3.	Choose Service Principal (automatic) and authorize access to your Azure subscription.
+4.	Give it a name "CICDPipelines". This lets your pipeline deploy to your resource group.
+ 
+Step 3: Create Resource Group using Terraform
+On the local machine, create a folder named terraform on C drive. Open Visual Studio Code and browse to this folder. 
+Create a new file named main.tf and add the code below:
+
+      terraform {
+        required_providers {
+          azurerm = {
+            source = "hashicorp/azurerm"
+            version = "~>4.36.0"
+          }
+        }
+      }
+      provider "azurerm" {
+        # Configuration options
+        features { }
+      }
+      resource "azurerm_resource_group" "rg" {
+        name     = "rg-prod"
+        location = "UK West"
+      }
+
+Step 4: Initialize Git
+On VS code, run the following commands:
+# git init
+# git add .
+# git commit -m “Initial Commit”
+
+Step 5: Upload Code to Azure DevOps
+Go to Azure Repos and copy URL for Azure Repos. In VS Code, run the commands below to upload code to Azure Repos.
+ 
+      # git remote add origin <Azure DevOPS Repos>
+      # git push -u origin --all
+ 
+Our Terraform code is uploaded to Azure Repos.
+
+Step 6: Create Your Pipeline (CI/CD)
+
+1.	Go to Pipelines → Create Pipeline.
+2.	Choose your code repository (GitHub/Azure Repos).
+3.	Select Starter pipeline (or YAML file in repo).
+
+Add the below details to YAML file: 
+# Pipeline.yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  # Step 1: Azure Login
+
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'CICDLabs'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "Logged into Azure!"
+        az group show --name CICD_Pipelines
+
+Step 7: Run and Verify
+
+Commit & push this YAML file as azure-pipelines.yml.
+
+At this point, you’ve got a working CI/CD pipeline:
+
+•	CI → Code is built/tested automatically.
+•	CD → Deploys to Azure.
+
+
